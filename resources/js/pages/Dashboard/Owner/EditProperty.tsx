@@ -1,5 +1,5 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ChevronRight, ChevronLeft, Check, Info
 } from 'lucide-react';
@@ -180,12 +180,45 @@ export default function EditProperty({ property }: { property: Property }) {
         });
     };
 
+    const hasError = (field: string) =>
+        Object.keys(errors).some((key) => key === field || key.startsWith(`${field}.`));
+
+    const errorMessage = (field: string) => {
+        const direct = errors[field as keyof typeof errors];
+        if (direct) return direct as string;
+
+        const nested = Object.entries(errors).find(([key]) => key.startsWith(`${field}.`));
+        return nested?.[1] as string | undefined;
+    };
+
     const inputClass = (field?: string) =>
         `w-full px-4 py-3.5 border rounded-xl text-sm text-navy-800 placeholder-navy-300 outline-none transition-colors ${
-            field && errors[field as keyof typeof errors]
-                ? 'border-red-400 focus:border-red-400'
+            field && hasError(field)
+                ? 'border-red-400 bg-red-50/60 ring-2 ring-red-100 focus:border-red-500 focus:ring-red-200'
                 : 'border-gray-200 focus:border-gold-400'
         }`;
+
+    const optionClass = (field: string, selected: boolean) => {
+        if (hasError(field)) {
+            return selected
+                ? 'border-red-500 bg-red-50 text-red-800 ring-2 ring-red-100'
+                : 'border-red-300 bg-red-50/60 text-red-700 hover:border-red-400';
+        }
+
+        return selected
+            ? 'border-navy-900 bg-navy-50 text-navy-800'
+            : 'border-gray-200 text-navy-500 hover:border-gray-300';
+    };
+
+    useEffect(() => {
+        if (Object.keys(errors).length === 0) return;
+        window.setTimeout(() => {
+            document.querySelector<HTMLElement>('[data-field-error="true"]')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+            });
+        }, 80);
+    }, [errors, step]);
 
     const labelClass = 'block text-xs font-semibold text-navy-600 uppercase tracking-wide mb-2';
     const sectionTitle = (title: string, desc?: string) => (
@@ -243,7 +276,12 @@ export default function EditProperty({ property }: { property: Property }) {
                 <form noValidate onSubmit={(e) => e.preventDefault()}>
                     {Object.keys(errors).length > 0 && (
                         <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
-                            Please review the highlighted fields. I moved you to the step that needs attention.
+                            <p className="font-semibold">Please review the highlighted fields. I moved you to the step that needs attention.</p>
+                            <ul className="mt-2 list-disc pl-5 text-xs">
+                                {Object.entries(errors).slice(0, 4).map(([key, message]) => (
+                                    <li key={key}>{message as string}</li>
+                                ))}
+                            </ul>
                         </div>
                     )}
 
@@ -254,29 +292,30 @@ export default function EditProperty({ property }: { property: Property }) {
                             <div>
                                 {sectionTitle('Basic Information', 'Tell us about your property')}
                                 <div className="space-y-5">
-                                    <div>
+                                    <div data-field-error={hasError('title') ? 'true' : undefined}>
                                         <label className={labelClass}>Property Title *</label>
                                         <input type="text" value={data.title} onChange={(e) => setData('title', e.target.value)}
                                             placeholder="e.g. Stunning Ocean-View Villa in Zanzibar" className={inputClass('title')} required />
                                         {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('type') ? 'true' : undefined}>
                                         <label className={labelClass}>Property Type *</label>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                             {['villa', 'apartment', 'cottage', 'penthouse', 'chalet', 'bungalow', 'studio'].map((type) => (
                                                 <button key={type} type="button"
                                                     onClick={() => setData('type', type)}
                                                     className={`py-3 px-4 border-2 rounded-xl text-sm font-medium capitalize transition-all ${
-                                                        data.type === type ? 'border-navy-900 bg-navy-50 text-navy-800' : 'border-gray-200 text-navy-500 hover:border-gray-300'
+                                                        optionClass('type', data.type === type)
                                                     }`}>
                                                     {type}
                                                 </button>
                                             ))}
                                         </div>
+                                        {errorMessage('type') && <p className="mt-1 text-xs text-red-500">{errorMessage('type')}</p>}
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('status') ? 'true' : undefined}>
                                         <label className={labelClass}>Listing Status *</label>
                                         <div className="grid grid-cols-3 gap-3">
                                             {[
@@ -287,22 +326,24 @@ export default function EditProperty({ property }: { property: Property }) {
                                                 <button key={s.value} type="button"
                                                     onClick={() => setData('status', s.value)}
                                                     className={`py-3 px-4 border-2 rounded-xl text-sm font-medium text-left transition-all ${
-                                                        data.status === s.value ? 'border-navy-900 bg-navy-50 text-navy-800' : 'border-gray-200 text-navy-500 hover:border-gray-300'
+                                                        optionClass('status', data.status === s.value)
                                                     }`}>
                                                     <span className="block font-semibold">{s.label}</span>
                                                     <span className="text-xs font-normal text-navy-400">{s.desc}</span>
                                                 </button>
                                             ))}
                                         </div>
+                                        {errorMessage('status') && <p className="mt-1 text-xs text-red-500">{errorMessage('status')}</p>}
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('short_description') ? 'true' : undefined}>
                                         <label className={labelClass}>Short Description <span className="text-navy-300 font-normal normal-case">(max 300 chars)</span></label>
                                         <input type="text" value={data.short_description} onChange={(e) => setData('short_description', e.target.value)}
-                                            placeholder="A one-liner that captures the essence of your property" className={inputClass()} maxLength={300} />
+                                            placeholder="A one-liner that captures the essence of your property" className={inputClass('short_description')} maxLength={300} />
+                                        {errorMessage('short_description') && <p className="mt-1 text-xs text-red-500">{errorMessage('short_description')}</p>}
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('description') ? 'true' : undefined}>
                                         <label className={labelClass}>Full Description *</label>
                                         <textarea value={data.description} onChange={(e) => setData('description', e.target.value)}
                                             rows={6} placeholder="Describe your property in detail..." className={inputClass('description')} required />
@@ -318,45 +359,49 @@ export default function EditProperty({ property }: { property: Property }) {
                             <div>
                                 {sectionTitle('Location', 'Where is your property located?')}
                                 <div className="grid sm:grid-cols-2 gap-5">
-                                    <div className="sm:col-span-2">
+                                    <div className="sm:col-span-2" data-field-error={hasError('address') ? 'true' : undefined}>
                                         <label className={labelClass}>Street Address *</label>
                                         <input type="text" value={data.address} onChange={(e) => setData('address', e.target.value)}
                                             placeholder="123 Beachfront Drive" className={inputClass('address')} required />
+                                        {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
                                     </div>
-                                    <div>
+                                    <div data-field-error={hasError('city') ? 'true' : undefined}>
                                         <label className={labelClass}>City *</label>
                                         <input type="text" value={data.city} onChange={(e) => setData('city', e.target.value)}
                                             placeholder="Zanzibar City" className={inputClass('city')} required />
                                         {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
                                     </div>
-                                    <div>
+                                    <div data-field-error={hasError('state') ? 'true' : undefined}>
                                         <label className={labelClass}>State / Province</label>
                                         <input type="text" value={data.state} onChange={(e) => setData('state', e.target.value)}
-                                            placeholder="Zanzibar" className={inputClass()} />
+                                            placeholder="Zanzibar" className={inputClass('state')} />
+                                        {errorMessage('state') && <p className="mt-1 text-xs text-red-500">{errorMessage('state')}</p>}
                                     </div>
-                                    <div>
+                                    <div data-field-error={hasError('country') ? 'true' : undefined}>
                                         <label className={labelClass}>Country *</label>
                                         <input type="text" value={data.country} onChange={(e) => setData('country', e.target.value)}
                                             placeholder="Tanzania" className={inputClass('country')} required />
                                         {errors.country && <p className="mt-1 text-xs text-red-500">{errors.country}</p>}
                                     </div>
-                                    <div>
+                                    <div data-field-error={hasError('zip_code') ? 'true' : undefined}>
                                         <label className={labelClass}>Postal / ZIP Code</label>
                                         <input type="text" value={data.zip_code} onChange={(e) => setData('zip_code', e.target.value)}
-                                            placeholder="00000" className={inputClass()} />
+                                            placeholder="00000" className={inputClass('zip_code')} />
+                                        {errorMessage('zip_code') && <p className="mt-1 text-xs text-red-500">{errorMessage('zip_code')}</p>}
                                     </div>
                                 </div>
 
                                 {/* Google Maps URL */}
-                                <div className="mt-5">
+                                <div className="mt-5" data-field-error={hasError('location_url') ? 'true' : undefined}>
                                     <label className={labelClass}>Google Maps URL <span className="text-navy-300 normal-case font-normal">(optional)</span></label>
                                     <input
                                         type="url"
                                         value={data.location_url}
                                         onChange={(e) => setData('location_url', e.target.value)}
                                         placeholder="https://maps.google.com/..."
-                                        className={inputClass()}
+                                        className={inputClass('location_url')}
                                     />
+                                    {errorMessage('location_url') && <p className="mt-1 text-xs text-red-500">{errorMessage('location_url')}</p>}
                                     <p className="mt-1 text-xs text-navy-400">Paste any Google Maps share link — it will appear as an embedded map on the property page.</p>
                                 </div>
                             </div>
@@ -367,17 +412,18 @@ export default function EditProperty({ property }: { property: Property }) {
                             <div>
                                 {sectionTitle('Pricing', 'Set competitive rates for your property')}
                                 <div className="grid sm:grid-cols-2 gap-5">
-                                    <div>
+                                    <div data-field-error={hasError('currency') ? 'true' : undefined}>
                                         <label className={labelClass}>Currency</label>
-                                        <select value={data.currency} onChange={(e) => setData('currency', e.target.value)} className={inputClass()}>
+                                        <select value={data.currency} onChange={(e) => setData('currency', e.target.value)} className={inputClass('currency')}>
                                             {['USD', 'EUR', 'GBP', 'TZS', 'KES', 'ZAR', 'AED'].map((c) => (
                                                 <option key={c} value={c}>{c}</option>
                                             ))}
                                         </select>
+                                        {errorMessage('currency') && <p className="mt-1 text-xs text-red-500">{errorMessage('currency')}</p>}
                                     </div>
                                     <div />
 
-                                    <div>
+                                    <div data-field-error={hasError('price_per_night') ? 'true' : undefined}>
                                         <label className={labelClass}>Nightly Rate *</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
@@ -387,31 +433,34 @@ export default function EditProperty({ property }: { property: Property }) {
                                         {errors.price_per_night && <p className="mt-1 text-xs text-red-500">{errors.price_per_night}</p>}
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('weekend_price') ? 'true' : undefined}>
                                         <label className={labelClass}>Weekend Rate <span className="text-navy-300 font-normal normal-case">(Fri–Sun)</span></label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
                                             <input type="number" value={data.weekend_price} onChange={(e) => setData('weekend_price', e.target.value)}
-                                                placeholder="Optional" min="1" className={`${inputClass()} pl-14`} />
+                                                placeholder="Optional" min="1" className={`${inputClass('weekend_price')} pl-14`} />
                                         </div>
+                                        {errorMessage('weekend_price') && <p className="mt-1 text-xs text-red-500">{errorMessage('weekend_price')}</p>}
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('cleaning_fee') ? 'true' : undefined}>
                                         <label className={labelClass}>Cleaning Fee</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
                                             <input type="number" value={data.cleaning_fee} onChange={(e) => setData('cleaning_fee', e.target.value)}
-                                                placeholder="0" min="0" className={`${inputClass()} pl-14`} />
+                                                placeholder="0" min="0" className={`${inputClass('cleaning_fee')} pl-14`} />
                                         </div>
+                                        {errorMessage('cleaning_fee') && <p className="mt-1 text-xs text-red-500">{errorMessage('cleaning_fee')}</p>}
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('security_deposit') ? 'true' : undefined}>
                                         <label className={labelClass}>Security Deposit</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
                                             <input type="number" value={data.security_deposit} onChange={(e) => setData('security_deposit', e.target.value)}
-                                                placeholder="0" min="0" className={`${inputClass()} pl-14`} />
+                                                placeholder="0" min="0" className={`${inputClass('security_deposit')} pl-14`} />
                                         </div>
+                                        {errorMessage('security_deposit') && <p className="mt-1 text-xs text-red-500">{errorMessage('security_deposit')}</p>}
                                     </div>
                                 </div>
 
@@ -433,39 +482,44 @@ export default function EditProperty({ property }: { property: Property }) {
                                         { label: 'Max Guests', field: 'max_guests', min: 1, max: 50 },
                                         { label: 'Area (m²)', field: 'area_sqm', min: 1, max: 9999, optional: true },
                                     ].map(({ label, field, min, max, optional }) => (
-                                        <div key={field}>
+                                        <div key={field} data-field-error={hasError(field) ? 'true' : undefined}>
                                             <label className={labelClass}>{label}{optional ? <span className="text-navy-300 font-normal normal-case ml-1">(opt.)</span> : ' *'}</label>
                                             <input type="number"
                                                 value={data[field as keyof typeof data] as string}
                                                 onChange={(e) => setData(field as any, e.target.value)}
                                                 min={min} max={max}
-                                                className={inputClass(optional ? undefined : field)}
+                                                className={inputClass(field)}
                                                 required={!optional}
                                             />
+                                            {errorMessage(field) && <p className="mt-1 text-xs text-red-500">{errorMessage(field)}</p>}
                                         </div>
                                     ))}
                                 </div>
 
                                 <div className="grid sm:grid-cols-2 gap-5">
-                                    <div>
+                                    <div data-field-error={hasError('min_stay_nights') ? 'true' : undefined}>
                                         <label className={labelClass}>Minimum Stay (nights)</label>
                                         <input type="number" value={data.min_stay_nights} onChange={(e) => setData('min_stay_nights', e.target.value)}
-                                            min="1" className={inputClass()} />
+                                            min="1" className={inputClass('min_stay_nights')} />
+                                        {errorMessage('min_stay_nights') && <p className="mt-1 text-xs text-red-500">{errorMessage('min_stay_nights')}</p>}
                                     </div>
-                                    <div>
+                                    <div data-field-error={hasError('max_stay_nights') ? 'true' : undefined}>
                                         <label className={labelClass}>Maximum Stay (nights) <span className="text-navy-300 font-normal normal-case">(opt.)</span></label>
                                         <input type="number" value={data.max_stay_nights} onChange={(e) => setData('max_stay_nights', e.target.value)}
-                                            min="1" placeholder="No limit" className={inputClass()} />
+                                            min="1" placeholder="No limit" className={inputClass('max_stay_nights')} />
+                                        {errorMessage('max_stay_nights') && <p className="mt-1 text-xs text-red-500">{errorMessage('max_stay_nights')}</p>}
                                     </div>
-                                    <div>
+                                    <div data-field-error={hasError('check_in_time') ? 'true' : undefined}>
                                         <label className={labelClass}>Check-in Time</label>
                                         <input type="time" value={data.check_in_time} onChange={(e) => setData('check_in_time', e.target.value)}
-                                            className={inputClass()} />
+                                            className={inputClass('check_in_time')} />
+                                        {errorMessage('check_in_time') && <p className="mt-1 text-xs text-red-500">{errorMessage('check_in_time')}</p>}
                                     </div>
-                                    <div>
+                                    <div data-field-error={hasError('check_out_time') ? 'true' : undefined}>
                                         <label className={labelClass}>Check-out Time</label>
                                         <input type="time" value={data.check_out_time} onChange={(e) => setData('check_out_time', e.target.value)}
-                                            className={inputClass()} />
+                                            className={inputClass('check_out_time')} />
+                                        {errorMessage('check_out_time') && <p className="mt-1 text-xs text-red-500">{errorMessage('check_out_time')}</p>}
                                     </div>
                                 </div>
                             </div>
@@ -475,7 +529,7 @@ export default function EditProperty({ property }: { property: Property }) {
                         {step === 4 && (
                             <div>
                                 {sectionTitle('Amenities', 'Select all amenities available at your property')}
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-2xl transition-colors ${hasError('amenities') ? 'border-2 border-red-300 bg-red-50/50 p-3' : ''}`} data-field-error={hasError('amenities') ? 'true' : undefined}>
                                     {AMENITY_OPTIONS.map((amenity) => {
                                         const selected = data.amenities.includes(amenity.key);
                                         return (
@@ -484,9 +538,11 @@ export default function EditProperty({ property }: { property: Property }) {
                                                 type="button"
                                                 onClick={() => toggleAmenity(amenity.key)}
                                                 className={`flex items-center gap-3 p-4 border-2 rounded-xl text-left transition-all ${
-                                                    selected
-                                                        ? 'border-navy-800 bg-navy-50'
-                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    hasError('amenities')
+                                                        ? optionClass('amenities', selected)
+                                                        : selected
+                                                            ? 'border-navy-800 bg-navy-50'
+                                                            : 'border-gray-200 hover:border-gray-300'
                                                 }`}
                                             >
                                                 <span className="text-xl">{amenity.emoji}</span>
@@ -498,13 +554,14 @@ export default function EditProperty({ property }: { property: Property }) {
                                         );
                                     })}
                                 </div>
+                                {errorMessage('amenities') && <p className="mt-2 text-xs text-red-500">{errorMessage('amenities')}</p>}
                                 <p className="text-xs text-navy-400 mt-4">{data.amenities.length} amenity{data.amenities.length !== 1 ? 's' : ''} selected</p>
                             </div>
                         )}
 
                         {/* Step 6: Photos */}
                         {step === 6 && (
-                            <div>
+                            <div data-field-error={(hasError('images') || hasError('image_urls')) ? 'true' : undefined}>
                                 {sectionTitle('Property Photos', 'Manage existing photos and add new ones (max 10 total)')}
                                 <ImageUploaderSection
                                     files={data.images}
@@ -515,6 +572,7 @@ export default function EditProperty({ property }: { property: Property }) {
                                     onDeleteExisting={deleteExistingImage}
                                     onSetPrimary={setAsPrimary}
                                     maxImages={10}
+                                    hasError={hasError('images') || hasError('image_urls')}
                                 />
                                 {(errors as any).images && <p className="mt-2 text-xs text-red-500">{(errors as any).images}</p>}
                                 {Object.entries(errors)
@@ -559,7 +617,7 @@ export default function EditProperty({ property }: { property: Property }) {
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div data-field-error={hasError('cancellation_policy') ? 'true' : undefined}>
                                         <h3 className="font-semibold text-navy-800 mb-3">Cancellation Policy *</h3>
                                         <div className="space-y-3">
                                             {[
@@ -590,9 +648,7 @@ export default function EditProperty({ property }: { property: Property }) {
                                                     type="button"
                                                     onClick={() => setData('cancellation_policy', policy.value)}
                                                     className={`w-full flex items-center justify-between p-4 border-2 rounded-xl text-left transition-all ${
-                                                        data.cancellation_policy === policy.value
-                                                            ? 'border-navy-900 bg-navy-50'
-                                                            : 'border-gray-200 hover:border-gray-300'
+                                                        optionClass('cancellation_policy', data.cancellation_policy === policy.value)
                                                     }`}
                                                 >
                                                     <div>
@@ -608,6 +664,7 @@ export default function EditProperty({ property }: { property: Property }) {
                                                 </button>
                                             ))}
                                         </div>
+                                        {errorMessage('cancellation_policy') && <p className="mt-2 text-xs text-red-500">{errorMessage('cancellation_policy')}</p>}
                                     </div>
                                 </div>
                             </div>

@@ -16,6 +16,7 @@ interface Props {
     onDeleteExisting?: (id: number) => void;
     onSetPrimary?: (id: number) => void;
     maxImages?: number;
+    hasError?: boolean;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -30,6 +31,7 @@ export default function ImageUploaderSection({
     onDeleteExisting,
     onSetPrimary,
     maxImages = 10,
+    hasError = false,
 }: Props) {
     const [urlInput, setUrlInput] = useState('');
     const [dragOver, setDragOver] = useState(false);
@@ -87,7 +89,7 @@ export default function ImageUploaderSection({
     const labelClass = 'text-xs font-semibold text-navy-600 uppercase tracking-wide';
 
     return (
-        <div className="space-y-7">
+        <div className={`space-y-7 rounded-2xl transition-colors ${hasError ? 'border-2 border-red-300 bg-red-50/40 p-4' : ''}`}>
 
             {/* ── Existing images ─────────────────────────────────────────── */}
             {existingImages.length > 0 && (
@@ -149,7 +151,9 @@ export default function ImageUploaderSection({
                         onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
                         onClick={() => inputRef.current?.click()}
                         className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all select-none ${
-                            dragOver
+                            hasError
+                                ? 'border-red-300 bg-white'
+                                : dragOver
                                 ? 'border-gold-400 bg-gold-50'
                                 : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
