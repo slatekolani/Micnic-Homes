@@ -68,7 +68,11 @@ class PropertyController extends Controller
 
     public function ownerIndex()
     {
-        $properties = Auth::user()->properties()
+        $query = Auth::user()?->isAdmin()
+            ? Property::query()
+            : Auth::user()->properties();
+
+        $properties = $query
             ->with(['images' => fn($q) => $q->orderByDesc('is_primary')->orderBy('sort_order')])
             ->withCount(['bookings', 'reviews'])
             ->latest()
@@ -264,6 +268,7 @@ class PropertyController extends Controller
     public function destroyImage(Property $property, PropertyImage $image)
     {
         $this->authorize('update', $property);
+        abort_unless($image->property_id === $property->id, 404);
 
         if (str_starts_with($image->url, '/storage/')) {
             Storage::disk('public')->delete(ltrim(str_replace('/storage/', '', $image->url), '/'));
@@ -282,6 +287,8 @@ class PropertyController extends Controller
     public function setPrimaryImage(Property $property, PropertyImage $image)
     {
         $this->authorize('update', $property);
+        abort_unless($image->property_id === $property->id, 404);
+
         $property->images()->update(['is_primary' => false]);
         $image->update(['is_primary' => true]);
         return back()->with('success', 'Cover image updated.');

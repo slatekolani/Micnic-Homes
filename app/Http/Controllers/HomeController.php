@@ -78,11 +78,21 @@ class HomeController extends Controller
     public function ownerDashboard()
     {
         $user  = Auth::user();
+        $propertiesQuery = $user?->isAdmin()
+            ? Property::query()
+            : $user->properties();
+
+        $bookingsQuery = Booking::query();
+
+        if (!$user?->isAdmin()) {
+            $bookingsQuery->whereHas('property', fn($q) => $q->where('owner_id', $user->id));
+        }
+
         $stats = [
-            'total_properties' => $user->properties()->count(),
-            'active_listings'  => $user->properties()->where('status', 'active')->count(),
-            'total_bookings'   => Booking::whereHas('property', fn($q) => $q->where('owner_id', $user->id))->count(),
-            'pending_bookings' => Booking::whereHas('property', fn($q) => $q->where('owner_id', $user->id))->where('status', 'pending')->count(),
+            'total_properties' => (clone $propertiesQuery)->count(),
+            'active_listings'  => (clone $propertiesQuery)->where('status', 'active')->count(),
+            'total_bookings'   => (clone $bookingsQuery)->count(),
+            'pending_bookings' => (clone $bookingsQuery)->where('status', 'pending')->count(),
         ];
 
         return Inertia::render('Dashboard/Owner/Index', ['stats' => $stats]);
