@@ -16,15 +16,8 @@ import { PageProps } from '../types';
 export default function Navbar() {
     const { auth } = usePage<PageProps>().props;
     const user = auth?.user;
-    const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener('scroll', onScroll);
-        return () => window.removeEventListener('scroll', onScroll);
-    }, []);
 
     useEffect(() => {
         document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -46,31 +39,23 @@ export default function Navbar() {
         { href: '/about', label: 'About', detail: 'Our experience', icon: Building2 },
         { href: '/contact', label: 'Contact', detail: 'Talk to us', icon: Mail },
     ];
-    const desktopLinkClass = scrolled
-        ? 'rounded-full px-4 py-2 text-sm font-semibold text-navy-700 transition-all hover:bg-white hover:text-gold-600 hover:shadow-sm'
-        : 'relative text-sm font-medium text-navy-700 transition-colors hover:text-gold-500 after:absolute after:-bottom-2 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-brand-red after:opacity-0 after:transition-opacity hover:after:opacity-100';
+    const desktopLinkClass = 'rounded-full px-4 py-2 text-sm font-semibold text-navy-700 transition-all hover:bg-white hover:text-gold-600 hover:shadow-sm';
 
     return (
         <nav className="fixed left-0 right-0 top-3 z-50 px-3 transition-all duration-500 ease-out sm:px-6">
             <div className="mx-auto max-w-7xl rounded-full border border-white/70 bg-white/90 px-4 shadow-2xl shadow-navy-950/10 backdrop-blur-xl transition-all duration-500 ease-out sm:px-6 lg:px-8">
-                <div className={`flex items-center justify-between transition-all duration-500 ease-out ${
-                    scrolled ? 'h-20' : 'h-28'
-                }`}>
+                <div className="flex h-20 items-center justify-between transition-all duration-500 ease-out">
                     {/* Logo */}
                     <Link href="/" className="flex items-center">
                         <img
                             src="/MicNic_Logo_Cropped.png"
                             alt="Micnic Villa"
-                            className={`w-auto object-contain transition-all duration-500 ease-out ${
-                                scrolled ? 'h-16' : 'h-24'
-                            }`}
+                            className="h-12 w-auto object-contain transition-all duration-500 ease-out md:h-16"
                         />
                     </Link>
 
                     {/* Desktop Nav */}
-                    <div className={`hidden items-center transition-all duration-500 md:flex ${
-                        scrolled ? 'gap-2 rounded-full bg-navy-50/80 p-1.5' : 'gap-8 bg-transparent p-0'
-                    }`}>
+                    <div className="hidden items-center gap-2 rounded-full bg-navy-50/80 p-1.5 transition-all duration-500 md:flex">
                         <Link href="/properties" className={desktopLinkClass}>
                             Properties
                         </Link>
@@ -122,9 +107,7 @@ export default function Navbar() {
                     {/* Mobile toggle */}
                     <button
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        className={`md:hidden inline-flex items-center justify-center rounded-full border border-navy-100 bg-white text-navy-900 shadow-sm transition-all duration-300 hover:border-gold-300 hover:text-gold-600 ${
-                            scrolled ? 'h-10 w-10' : 'h-11 w-11'
-                        }`}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-navy-100 bg-white text-navy-900 shadow-sm transition-all duration-300 hover:border-gold-300 hover:text-gold-600 md:hidden"
                         aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                         aria-expanded={mobileOpen}
                     >
@@ -135,9 +118,7 @@ export default function Navbar() {
 
             {/* Mobile menu */}
             {mobileOpen && (
-                <div className={`md:hidden fixed inset-x-0 bottom-0 z-40 transition-all duration-500 ${
-                    scrolled ? 'top-24' : 'top-28'
-                }`}>
+                <div className="fixed inset-x-0 bottom-0 top-24 z-40 transition-all duration-500 md:hidden">
                     <button
                         type="button"
                         className="absolute inset-0 bg-navy-950/45 backdrop-blur-sm"
