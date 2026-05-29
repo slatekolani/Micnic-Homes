@@ -86,7 +86,9 @@ export default function Login() {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="Your password"
-                                    className="w-full pl-11 pr-11 py-3.5 border border-gray-200 focus:border-gold-400 rounded-xl text-sm text-navy-800 placeholder-navy-300 outline-none transition-colors"
+                                    className={`w-full pl-11 pr-11 py-3.5 border rounded-xl text-sm text-navy-800 placeholder-navy-300 outline-none transition-colors ${
+                                        errors.password ? 'border-red-400 focus:border-red-400' : 'border-gray-200 focus:border-gold-400'
+                                    }`}
                                     required
                                 />
                                 <button
@@ -97,6 +99,7 @@ export default function Login() {
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
+                            {errors.password && <p className="mt-1.5 text-xs text-red-500">{errors.password}</p>}
                         </div>
 
                         {/* Remember */}

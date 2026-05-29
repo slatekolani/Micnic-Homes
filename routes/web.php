@@ -58,12 +58,20 @@ Route::get('/booking/confirmation/{reference}', [BookingController::class, 'conf
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+Route::middleware('auth')->prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::get('/', [HomeController::class, 'guestDashboard'])->name('index');
+    Route::get('/bookings', [BookingController::class, 'guestBookings'])->name('bookings');
+    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'guestCancel'])->name('bookings.cancel');
+});
+
 // Admin / Owner Dashboard
-Route::middleware('auth')->prefix('owner')->name('owner.')->group(function () {
+Route::middleware(['auth', 'owner.admin'])->prefix('owner')->name('owner.')->group(function () {
     Route::get('/', [HomeController::class, 'ownerDashboard'])->name('index');
     Route::get('/properties', [PropertyController::class, 'ownerIndex'])->name('properties');
     Route::get('/properties/create', [PropertyController::class, 'create'])->name('properties.create');

@@ -97,4 +97,20 @@ class HomeController extends Controller
 
         return Inertia::render('Dashboard/Owner/Index', ['stats' => $stats]);
     }
+
+    public function guestDashboard()
+    {
+        $bookingsQuery = Booking::where('guest_id', Auth::id());
+
+        $stats = [
+            'total_bookings' => (clone $bookingsQuery)->count(),
+            'upcoming_bookings' => (clone $bookingsQuery)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->whereDate('check_in', '>=', now()->toDateString())
+                ->count(),
+            'completed_stays' => (clone $bookingsQuery)->where('status', 'completed')->count(),
+        ];
+
+        return Inertia::render('Dashboard/Guest/Index', ['stats' => $stats]);
+    }
 }

@@ -38,6 +38,8 @@ export default function Navbar() {
         closeMobileMenu();
         router.post('/logout');
     };
+    const dashboardHref = user?.role === 'guest' ? '/dashboard' : '/owner';
+    const canManageProperties = user?.role === 'admin' || user?.role === 'owner';
 
     const navItems = [
         { href: '/properties', label: 'Properties', detail: 'Explore stays', icon: Search },
@@ -96,14 +98,16 @@ export default function Navbar() {
                                 </button>
                                 {userMenuOpen && (
                                     <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
-                                        <Link href="/owner" className="flex items-center gap-3 px-4 py-3 text-sm text-navy-700 hover:bg-navy-50 transition-colors" onClick={() => setUserMenuOpen(false)}>
+                                        <Link href={dashboardHref} className="flex items-center gap-3 px-4 py-3 text-sm text-navy-700 hover:bg-navy-50 transition-colors" onClick={() => setUserMenuOpen(false)}>
                                             <LayoutDashboard className="w-4 h-4 text-navy-400" />
                                             Dashboard
                                         </Link>
-                                        <Link href="/owner/properties/create" className="flex items-center gap-3 px-4 py-3 text-sm text-navy-700 hover:bg-navy-50 transition-colors" onClick={() => setUserMenuOpen(false)}>
-                                            <Building2 className="w-4 h-4 text-navy-400" />
-                                            List Property
-                                        </Link>
+                                        {canManageProperties && (
+                                            <Link href="/owner/properties/create" className="flex items-center gap-3 px-4 py-3 text-sm text-navy-700 hover:bg-navy-50 transition-colors" onClick={() => setUserMenuOpen(false)}>
+                                                <Building2 className="w-4 h-4 text-navy-400" />
+                                                List Property
+                                            </Link>
+                                        )}
                                         <hr className="my-1 border-gray-100" />
                                         <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                             <LogOut className="w-4 h-4" />
@@ -195,21 +199,23 @@ export default function Navbar() {
                                     </div>
 
                                     <Link
-                                        href="/owner"
+                                        href={dashboardHref}
                                         className="flex items-center justify-center gap-2 rounded-2xl bg-navy-900 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-navy-900/20 transition-all hover:bg-navy-800"
                                         onClick={closeMobileMenu}
                                     >
                                         <LayoutDashboard className="h-4 w-4" />
                                         Dashboard
                                     </Link>
-                                    <Link
-                                        href="/owner/properties/create"
-                                        className="flex items-center justify-center gap-2 rounded-2xl border border-gold-200 bg-gold-50 px-4 py-3.5 text-sm font-semibold text-gold-800 transition-all hover:bg-gold-100"
-                                        onClick={closeMobileMenu}
-                                    >
-                                        <Building2 className="h-4 w-4" />
-                                        List Property
-                                    </Link>
+                                    {canManageProperties && (
+                                        <Link
+                                            href="/owner/properties/create"
+                                            className="flex items-center justify-center gap-2 rounded-2xl border border-gold-200 bg-gold-50 px-4 py-3.5 text-sm font-semibold text-gold-800 transition-all hover:bg-gold-100"
+                                            onClick={closeMobileMenu}
+                                        >
+                                            <Building2 className="h-4 w-4" />
+                                            List Property
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={logout}
                                         className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50"

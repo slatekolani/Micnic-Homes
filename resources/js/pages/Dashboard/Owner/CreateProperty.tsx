@@ -8,6 +8,7 @@ import AppLayout from '../../../layouts/AppLayout';
 import ImageUploaderSection from '../../../components/ImageUploaderSection';
 
 const STEPS = ['Basic Info', 'Location', 'Pricing', 'Details', 'Amenities', 'Rules & Policy', 'Photos'];
+const MAX_MONEY_AMOUNT = 9999999;
 
 const FIELD_STEP_MAP: Record<string, number> = {
     title: 0,
@@ -135,6 +136,8 @@ export default function CreateProperty() {
             : [...data.amenities, key]
         );
     };
+
+    const moneyValue = (value: string) => value.replace(/,/g, '');
 
     const firstErrorStep = (formErrors: Record<string, string>) => {
         const firstField = Object.keys(formErrors)[0]?.split('.')[0];
@@ -374,8 +377,8 @@ export default function CreateProperty() {
                                         <label className={labelClass}>Nightly Rate *</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
-                                            <input type="number" value={data.price_per_night} onChange={(e) => setData('price_per_night', e.target.value)}
-                                                placeholder="0" min="1" className={`${inputClass('price_per_night')} pl-14`} required />
+                                            <input type="number" value={data.price_per_night} onChange={(e) => setData('price_per_night', moneyValue(e.target.value))}
+                                                placeholder="0" min="1" max={MAX_MONEY_AMOUNT} className={`${inputClass('price_per_night')} pl-14`} required />
                                         </div>
                                         {errors.price_per_night && <p className="mt-1 text-xs text-red-500">{errors.price_per_night}</p>}
                                     </div>
@@ -384,8 +387,8 @@ export default function CreateProperty() {
                                         <label className={labelClass}>Weekend Rate <span className="text-navy-300 font-normal normal-case">(Fri–Sun)</span></label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
-                                            <input type="number" value={data.weekend_price} onChange={(e) => setData('weekend_price', e.target.value)}
-                                                placeholder="Optional" min="1" className={`${inputClass('weekend_price')} pl-14`} />
+                                            <input type="number" value={data.weekend_price} onChange={(e) => setData('weekend_price', moneyValue(e.target.value))}
+                                                placeholder="Optional" min="1" max={MAX_MONEY_AMOUNT} className={`${inputClass('weekend_price')} pl-14`} />
                                         </div>
                                         {errorMessage('weekend_price') && <p className="mt-1 text-xs text-red-500">{errorMessage('weekend_price')}</p>}
                                     </div>
@@ -394,8 +397,8 @@ export default function CreateProperty() {
                                         <label className={labelClass}>Cleaning Fee</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
-                                            <input type="number" value={data.cleaning_fee} onChange={(e) => setData('cleaning_fee', e.target.value)}
-                                                placeholder="0" min="0" className={`${inputClass('cleaning_fee')} pl-14`} />
+                                            <input type="number" value={data.cleaning_fee} onChange={(e) => setData('cleaning_fee', moneyValue(e.target.value))}
+                                                placeholder="0" min="0" max={MAX_MONEY_AMOUNT} className={`${inputClass('cleaning_fee')} pl-14`} />
                                         </div>
                                         {errorMessage('cleaning_fee') && <p className="mt-1 text-xs text-red-500">{errorMessage('cleaning_fee')}</p>}
                                     </div>
@@ -404,8 +407,8 @@ export default function CreateProperty() {
                                         <label className={labelClass}>Security Deposit</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-400 text-sm font-medium">{data.currency}</span>
-                                            <input type="number" value={data.security_deposit} onChange={(e) => setData('security_deposit', e.target.value)}
-                                                placeholder="0" min="0" className={`${inputClass('security_deposit')} pl-14`} />
+                                            <input type="number" value={data.security_deposit} onChange={(e) => setData('security_deposit', moneyValue(e.target.value))}
+                                                placeholder="0" min="0" max={MAX_MONEY_AMOUNT} className={`${inputClass('security_deposit')} pl-14`} />
                                         </div>
                                         {errorMessage('security_deposit') && <p className="mt-1 text-xs text-red-500">{errorMessage('security_deposit')}</p>}
                                     </div>

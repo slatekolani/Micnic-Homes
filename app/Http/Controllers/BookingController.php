@@ -83,6 +83,31 @@ class BookingController extends Controller
         ]);
     }
 
+    public function guestBookings()
+    {
+        $bookings = Booking::with(['property.images'])
+            ->where('guest_id', Auth::id())
+            ->latest()
+            ->paginate(20);
+
+        return Inertia::render('Dashboard/Guest/Bookings', [
+            'bookings' => $bookings,
+        ]);
+    }
+
+    public function guestCancel(Booking $booking)
+    {
+        abort_unless((int) $booking->guest_id === (int) Auth::id(), 403);
+
+        $booking->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'cancellation_reason' => request('reason'),
+        ]);
+
+        return back()->with('success', 'Booking cancelled.');
+    }
+
     public function confirm(Booking $booking)
     {
         $this->authorizeOwner($booking);

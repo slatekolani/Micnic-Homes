@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class PropertyController extends Controller
@@ -103,10 +104,10 @@ class PropertyController extends Controller
             'zip_code'            => 'nullable|string|max:20',
             'location_url'        => 'nullable|string|max:1000',
             'currency'            => 'nullable|in:USD,EUR,GBP,TZS,KES,ZAR,AED',
-            'price_per_night'     => 'required|numeric|min:1|max:99999',
-            'weekend_price'       => 'nullable|numeric|min:1|max:99999',
-            'cleaning_fee'        => 'nullable|numeric|min:0|max:9999',
-            'security_deposit'    => 'nullable|numeric|min:0|max:99999',
+            'price_per_night'     => 'required|numeric|min:1|max:9999999',
+            'weekend_price'       => 'nullable|numeric|min:1|max:9999999',
+            'cleaning_fee'        => 'nullable|numeric|min:0|max:9999999',
+            'security_deposit'    => 'nullable|numeric|min:0|max:9999999',
             'bedrooms'            => 'required|integer|min:0|max:20',
             'bathrooms'           => 'required|integer|min:1|max:20',
             'max_guests'          => 'required|integer|min:1|max:50',
@@ -125,7 +126,7 @@ class PropertyController extends Controller
             'images'              => 'nullable|array|max:10',
             'images.*'            => 'image|mimes:jpeg,jpg,png,webp|max:10240',
             'image_urls'          => 'nullable|array',
-            'image_urls.*'        => 'nullable|string|max:2000',
+            'image_urls.*'        => 'nullable|url|max:2000',
         ]);
 
         $data['owner_id'] = Auth::id();
@@ -134,9 +135,10 @@ class PropertyController extends Controller
         $data['pets_allowed']     = $request->boolean('pets_allowed');
         $data['parties_allowed']  = $request->boolean('parties_allowed');
 
-        $uploadedFiles = $data['images'] ?? [];
-        $imageUrls     = $data['image_urls'] ?? [];
+        $imageUrls = array_values(array_filter($data['image_urls'] ?? []));
         unset($data['images'], $data['image_urls']);
+
+        $this->ensureImageLimit(count($request->file('images', [])) + count($imageUrls));
 
         $property = Property::create($data);
 
@@ -163,8 +165,6 @@ class PropertyController extends Controller
         }
 
         foreach ($imageUrls as $url) {
-            if (!$url) continue;
-            if ($sortIndex >= 10) break;
             PropertyImage::create([
                 'property_id' => $property->id,
                 'url'         => $url,
@@ -200,10 +200,10 @@ class PropertyController extends Controller
             'zip_code'            => 'nullable|string|max:20',
             'location_url'        => 'nullable|string|max:1000',
             'currency'            => 'nullable|in:USD,EUR,GBP,TZS,KES,ZAR,AED',
-            'price_per_night'     => 'required|numeric|min:1|max:99999',
-            'weekend_price'       => 'nullable|numeric|min:1|max:99999',
-            'cleaning_fee'        => 'nullable|numeric|min:0|max:9999',
-            'security_deposit'    => 'nullable|numeric|min:0|max:99999',
+            'price_per_night'     => 'required|numeric|min:1|max:9999999',
+            'weekend_price'       => 'nullable|numeric|min:1|max:9999999',
+            'cleaning_fee'        => 'nullable|numeric|min:0|max:9999999',
+            'security_deposit'    => 'nullable|numeric|min:0|max:9999999',
             'bedrooms'            => 'required|integer|min:0|max:20',
             'bathrooms'           => 'required|integer|min:1|max:20',
             'max_guests'          => 'required|integer|min:1|max:50',
@@ -223,15 +223,19 @@ class PropertyController extends Controller
             'images'              => 'nullable|array|max:10',
             'images.*'            => 'image|mimes:jpeg,jpg,png,webp|max:10240',
             'image_urls'          => 'nullable|array',
-            'image_urls.*'        => 'nullable|string|max:2000',
+            'image_urls.*'        => 'nullable|url|max:2000',
         ]);
 
         $data['smoking_allowed']  = $request->boolean('smoking_allowed');
         $data['pets_allowed']     = $request->boolean('pets_allowed');
         $data['parties_allowed']  = $request->boolean('parties_allowed');
 
-        $imageUrls = $data['image_urls'] ?? [];
+        $imageUrls = array_values(array_filter($data['image_urls'] ?? []));
         unset($data['images'], $data['image_urls']);
+
+        $this->ensureImageLimit(
+            $property->images()->count() + count($request->file('images', [])) + count($imageUrls)
+        );
 
         $property->update($data);
 
@@ -240,7 +244,6 @@ class PropertyController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                if ($property->images()->count() + $addedCount >= 10) break;
                 $url = $this->storePublicPropertyImage($property, $image);
                 if (!$url) {
                     Log::warning('Property image upload did not create a readable file.', [
@@ -261,8 +264,6 @@ class PropertyController extends Controller
         }
 
         foreach ($imageUrls as $url) {
-            if (!$url) continue;
-            if ($property->images()->count() + $addedCount >= 10) break;
             PropertyImage::create([
                 'property_id' => $property->id,
                 'url'         => $url,
@@ -326,19 +327,28 @@ class PropertyController extends Controller
 
         $relativePath = 'uploads/properties/' . $property->id . '/' . $filename;
 
-        return is_file(public_path($relativePath)) ? asset($relativePath) : null;
+        return is_file(public_path($relativePath)) ? $relativePath : null;
+    }
+
+    private function ensureImageLimit(int $total): void
+    {
+        if ($total > 10) {
+            throw ValidationException::withMessages([
+                'images' => 'A property can have a maximum of 10 photos total. Remove some photos before adding more.',
+            ]);
+        }
     }
 
     private function publicUploadPathFromUrl(string $url): ?string
     {
         $path = parse_url($url, PHP_URL_PATH) ?: $url;
-        $marker = '/uploads/';
+        $path = ltrim($path, '/');
 
-        if (!str_contains($path, $marker)) {
+        if (!str_starts_with($path, 'uploads/')) {
             return null;
         }
 
-        return ltrim(substr($path, strpos($path, $marker) + 1), '/');
+        return $path;
     }
 
     private function publicStoragePathFromUrl(string $url): ?string

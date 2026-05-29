@@ -86,6 +86,7 @@ export default function Register() {
                             </button>
                         ))}
                     </div>
+                    {errors.role && <p className="-mt-3 mb-4 text-xs text-red-500">{errors.role}</p>}
 
                     <form onSubmit={submit} className="space-y-4">
                         {/* Name */}
@@ -138,9 +139,12 @@ export default function Register() {
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
                                     placeholder="+1 (555) 000-0000"
-                                    className="w-full pl-11 pr-4 py-3.5 border border-gray-200 focus:border-gold-400 rounded-xl text-sm text-navy-800 placeholder-navy-300 outline-none transition-colors"
+                                    className={`w-full pl-11 pr-4 py-3.5 border rounded-xl text-sm text-navy-800 placeholder-navy-300 outline-none transition-colors ${
+                                        errors.phone ? 'border-red-400' : 'border-gray-200 focus:border-gold-400'
+                                    }`}
                                 />
                             </div>
+                            {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                         </div>
 
                         {/* Password */}
@@ -175,7 +179,9 @@ export default function Register() {
                                     value={data.password_confirmation}
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
                                     placeholder="Confirm your password"
-                                    className="w-full pl-11 pr-4 py-3.5 border border-gray-200 focus:border-gold-400 rounded-xl text-sm text-navy-800 placeholder-navy-300 outline-none transition-colors"
+                                    className={`w-full pl-11 pr-4 py-3.5 border rounded-xl text-sm text-navy-800 placeholder-navy-300 outline-none transition-colors ${
+                                        errors.password ? 'border-red-400' : 'border-gray-200 focus:border-gold-400'
+                                    }`}
                                     required
                                 />
                             </div>

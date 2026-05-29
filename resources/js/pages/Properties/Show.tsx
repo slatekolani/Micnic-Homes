@@ -61,6 +61,13 @@ export default function PropertyShow({ property }: Props) {
         post(`/properties/${property.slug}/book`);
     };
 
+    const bookingInputClass = (field: keyof typeof data) =>
+        `w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-1 ${
+            errors[field]
+                ? 'border-red-400 bg-red-50/60 focus:border-red-500 focus:ring-red-200'
+                : 'border-gray-200 focus:border-gold-400 focus:ring-gold-400'
+        }`;
+
     const images = property.images ?? [];
     const primaryImage = images[0]?.url ?? null;
     const propertyDescription = property.short_description || property.description.replace(/\s+/g, ' ').slice(0, 155);
@@ -335,7 +342,7 @@ export default function PropertyShow({ property }: Props) {
                                                 value={data.guest_name}
                                                 onChange={(e) => setData('guest_name', e.target.value)}
                                                 placeholder="Aida Aldan"
-                                                className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400"
+                                                className={`${bookingInputClass('guest_name')} pl-9`}
                                                 required
                                             />
                                         </div>
@@ -352,7 +359,7 @@ export default function PropertyShow({ property }: Props) {
                                                 value={data.guest_email}
                                                 onChange={(e) => setData('guest_email', e.target.value)}
                                                 placeholder="you@example.com"
-                                                className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400"
+                                                className={`${bookingInputClass('guest_email')} pl-9`}
                                                 required
                                             />
                                         </div>
@@ -369,7 +376,7 @@ export default function PropertyShow({ property }: Props) {
                                                 value={data.guest_phone}
                                                 onChange={(e) => setData('guest_phone', e.target.value)}
                                                 placeholder="0620188878"
-                                                className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400"
+                                                className={`${bookingInputClass('guest_phone')} pl-9`}
                                                 required
                                             />
                                         </div>
@@ -389,7 +396,7 @@ export default function PropertyShow({ property }: Props) {
                                                 value={data.check_in}
                                                 min={new Date().toISOString().split('T')[0]}
                                                 onChange={(e) => setData('check_in', e.target.value)}
-                                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400"
+                                                className={bookingInputClass('check_in')}
                                                 required
                                             />
                                             {errors.check_in && <p className="text-red-500 text-xs mt-1">{errors.check_in}</p>}
@@ -401,7 +408,7 @@ export default function PropertyShow({ property }: Props) {
                                                 value={data.check_out}
                                                 min={data.check_in || new Date().toISOString().split('T')[0]}
                                                 onChange={(e) => setData('check_out', e.target.value)}
-                                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400"
+                                                className={bookingInputClass('check_out')}
                                                 required
                                             />
                                             {errors.check_out && <p className="text-red-500 text-xs mt-1">{errors.check_out}</p>}
@@ -414,7 +421,7 @@ export default function PropertyShow({ property }: Props) {
                                         <select
                                             value={data.guests}
                                             onChange={(e) => setData('guests', parseInt(e.target.value))}
-                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400"
+                                            className={bookingInputClass('guests')}
                                         >
                                             {Array.from({ length: property.max_guests }, (_, i) => i + 1).map((n) => (
                                                 <option key={n} value={n}>{n} guest{n !== 1 ? 's' : ''}</option>
@@ -430,8 +437,9 @@ export default function PropertyShow({ property }: Props) {
                                             onChange={(e) => setData('special_requests', e.target.value)}
                                             rows={2}
                                             placeholder="Any special requirements..."
-                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl resize-none focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400"
+                                            className={`${bookingInputClass('special_requests')} resize-none`}
                                         />
+                                        {errors.special_requests && <p className="text-red-500 text-xs mt-1">{errors.special_requests}</p>}
                                     </div>
 
                                     {/* Price breakdown */}
