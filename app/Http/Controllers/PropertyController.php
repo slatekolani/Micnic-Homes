@@ -6,6 +6,7 @@ use App\Models\Property;
 use App\Models\PropertyImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -142,10 +143,18 @@ class PropertyController extends Controller
         $sortIndex = 0;
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $path = $image->store('properties/' . $property->id, 'public');
+                $url = $this->storePublicPropertyImage($property, $image);
+                if (!$url) {
+                    Log::warning('Property image upload did not create a readable file.', [
+                        'property_id' => $property->id,
+                        'filename' => $image->getClientOriginalName(),
+                    ]);
+                    continue;
+                }
+
                 PropertyImage::create([
                     'property_id' => $property->id,
-                    'url'         => '/storage/' . $path,
+                    'url'         => $url,
                     'sort_order'  => $sortIndex,
                     'is_primary'  => $sortIndex === 0,
                 ]);
@@ -232,10 +241,18 @@ class PropertyController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 if ($property->images()->count() + $addedCount >= 10) break;
-                $path = $image->store('properties/' . $property->id, 'public');
+                $url = $this->storePublicPropertyImage($property, $image);
+                if (!$url) {
+                    Log::warning('Property image upload did not create a readable file.', [
+                        'property_id' => $property->id,
+                        'filename' => $image->getClientOriginalName(),
+                    ]);
+                    continue;
+                }
+
                 PropertyImage::create([
                     'property_id' => $property->id,
-                    'url'         => '/storage/' . $path,
+                    'url'         => $url,
                     'sort_order'  => $sortMax + $addedCount + 1,
                     'is_primary'  => $property->images()->count() === 0 && $addedCount === 0,
                 ]);
@@ -268,10 +285,12 @@ class PropertyController extends Controller
     public function destroyImage(Property $property, PropertyImage $image)
     {
         $this->authorize('update', $property);
-        abort_unless($image->property_id === $property->id, 404);
+        abort_unless((int) $image->property_id === (int) $property->id, 404);
 
-        if (str_starts_with($image->url, '/storage/')) {
-            Storage::disk('public')->delete(ltrim(str_replace('/storage/', '', $image->url), '/'));
+        if ($path = $this->publicUploadPathFromUrl($image->getRawOriginal('url') ?: $image->url)) {
+            @unlink(public_path($path));
+        } elseif ($path = $this->publicStoragePathFromUrl($image->getRawOriginal('url') ?: $image->url)) {
+            Storage::disk('public')->delete($path);
         }
 
         $wasPrimary = $image->is_primary;
@@ -287,11 +306,51 @@ class PropertyController extends Controller
     public function setPrimaryImage(Property $property, PropertyImage $image)
     {
         $this->authorize('update', $property);
-        abort_unless($image->property_id === $property->id, 404);
+        abort_unless((int) $image->property_id === (int) $property->id, 404);
 
         $property->images()->update(['is_primary' => false]);
         $image->update(['is_primary' => true]);
         return back()->with('success', 'Cover image updated.');
+    }
+
+    private function storePublicPropertyImage(Property $property, \Illuminate\Http\UploadedFile $image): ?string
+    {
+        $directory = public_path('uploads/properties/' . $property->id);
+
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+            return null;
+        }
+
+        $filename = $image->hashName();
+        $image->move($directory, $filename);
+
+        $relativePath = 'uploads/properties/' . $property->id . '/' . $filename;
+
+        return is_file(public_path($relativePath)) ? asset($relativePath) : null;
+    }
+
+    private function publicUploadPathFromUrl(string $url): ?string
+    {
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+        $marker = '/uploads/';
+
+        if (!str_contains($path, $marker)) {
+            return null;
+        }
+
+        return ltrim(substr($path, strpos($path, $marker) + 1), '/');
+    }
+
+    private function publicStoragePathFromUrl(string $url): ?string
+    {
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+        $marker = '/storage/';
+
+        if (!str_contains($path, $marker)) {
+            return null;
+        }
+
+        return ltrim(substr($path, strpos($path, $marker) + strlen($marker)), '/');
     }
 
     private function randomPropertyImages(int $limit)

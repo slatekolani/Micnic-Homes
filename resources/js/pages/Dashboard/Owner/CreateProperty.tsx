@@ -9,6 +9,39 @@ import ImageUploaderSection from '../../../components/ImageUploaderSection';
 
 const STEPS = ['Basic Info', 'Location', 'Pricing', 'Details', 'Amenities', 'Rules & Policy', 'Photos'];
 
+const FIELD_STEP_MAP: Record<string, number> = {
+    title: 0,
+    type: 0,
+    short_description: 0,
+    description: 0,
+    address: 1,
+    city: 1,
+    state: 1,
+    country: 1,
+    zip_code: 1,
+    location_url: 1,
+    currency: 2,
+    price_per_night: 2,
+    weekend_price: 2,
+    cleaning_fee: 2,
+    security_deposit: 2,
+    bedrooms: 3,
+    bathrooms: 3,
+    max_guests: 3,
+    area_sqm: 3,
+    min_stay_nights: 3,
+    max_stay_nights: 3,
+    check_in_time: 3,
+    check_out_time: 3,
+    amenities: 4,
+    smoking_allowed: 5,
+    pets_allowed: 5,
+    parties_allowed: 5,
+    cancellation_policy: 5,
+    images: 6,
+    image_urls: 6,
+};
+
 const AMENITY_OPTIONS = [
     { key: 'wifi',        label: 'High-Speed WiFi',      emoji: '📶' },
     { key: 'pool',        label: 'Private Pool',         emoji: '🏊' },
@@ -103,8 +136,17 @@ export default function CreateProperty() {
         );
     };
 
+    const firstErrorStep = (formErrors: Record<string, string>) => {
+        const firstField = Object.keys(formErrors)[0]?.split('.')[0];
+        return firstField && FIELD_STEP_MAP[firstField] !== undefined ? FIELD_STEP_MAP[firstField] : step;
+    };
+
     const submit = () => {
-        post('/owner/properties', { forceFormData: true });
+        post('/owner/properties', {
+            forceFormData: true,
+            preserveScroll: true,
+            onError: (formErrors) => setStep(firstErrorStep(formErrors)),
+        });
     };
 
     const inputClass = (field?: string) =>
@@ -168,6 +210,12 @@ export default function CreateProperty() {
                 </div>
 
                 <form noValidate onSubmit={(e) => e.preventDefault()}>
+                    {Object.keys(errors).length > 0 && (
+                        <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
+                            Please review the highlighted fields. I moved you to the step that needs attention.
+                        </div>
+                    )}
+
                     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8">
 
                         {/* Step 0: Basic Info */}
@@ -415,6 +463,11 @@ export default function CreateProperty() {
                                     maxImages={10}
                                 />
                                 {(errors as any).images && <p className="mt-2 text-xs text-red-500">{(errors as any).images}</p>}
+                                {Object.entries(errors)
+                                    .filter(([key]) => key.startsWith('images.') || key.startsWith('image_urls.'))
+                                    .map(([key, message]) => (
+                                        <p key={key} className="mt-2 text-xs text-red-500">{message as string}</p>
+                                    ))}
                             </div>
                         )}
 

@@ -68,6 +68,10 @@ export default function Home({ carousel, latest, categories, marketingImages }: 
     const [checkIn, setCheckIn]   = useState('');
     const [checkOut, setCheckOut] = useState('');
     const [guests, setGuests]     = useState('');
+    const primarySeoImage = carousel[0]?.images?.[0]?.url || marketingImages[0]?.url || null;
+    const absoluteSeoImage = primarySeoImage
+        ? (primarySeoImage.startsWith('http') ? primarySeoImage : `${SITE_URL}${primarySeoImage.startsWith('/') ? primarySeoImage : `/${primarySeoImage}`}`)
+        : `${SITE_URL}/MicNic_Logo.png`;
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -106,7 +110,7 @@ export default function Home({ carousel, latest, categories, marketingImages }: 
                         name: 'Micnic Homes',
                         url: SITE_URL,
                         logo: `${SITE_URL}/MicNic_Logo.png`,
-                        image: carousel[0]?.images?.[0]?.url ? `${SITE_URL}${carousel[0].images[0].url}` : `${SITE_URL}/MicNic_Logo.png`,
+                        image: absoluteSeoImage,
                         telephone: '+255620188878',
                         email: 'info@micnichomes.co.tz',
                         address: {
