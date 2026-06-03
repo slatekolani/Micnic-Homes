@@ -5,7 +5,7 @@ import { Booking, PageProps, Property } from '../types';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-const WHATSAPP_URL = 'https://wa.me/255620188878';
+const WHATSAPP_URL = 'https://wa.me/255787070909';
 
 interface BreadcrumbItem {
     label: string;
@@ -61,7 +61,7 @@ function buildBreadcrumbs(props: PageProps): BreadcrumbItem[] {
         return [
             ...crumbs,
             { label: 'Properties', href: '/properties' },
-            { label: property?.title || titleCase(pathname.split('/').filter(Boolean).at(-1) || 'Property') },
+            { label: property?.title || titleCase(pathname.split('/').filter(Boolean).slice(-1)[0] || 'Property') },
         ];
     }
 
