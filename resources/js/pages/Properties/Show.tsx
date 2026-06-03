@@ -375,7 +375,7 @@ export default function PropertyShow({ property }: Props) {
                                                 type="tel"
                                                 value={data.guest_phone}
                                                 onChange={(e) => setData('guest_phone', e.target.value)}
-                                                placeholder="0620188878"
+                                                placeholder="0787 070 909"
                                                 className={`${bookingInputClass('guest_phone')} pl-9`}
                                                 required
                                             />

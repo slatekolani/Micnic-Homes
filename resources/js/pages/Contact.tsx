@@ -6,9 +6,9 @@ import SeoHead, { SITE_URL } from '../components/SeoHead';
 import { MarketingImage } from '../types';
 
 const contactMethods = [
-    { icon: Phone, label: 'Call / WhatsApp', value: '0620188878', href: 'tel:+255620188878' },
+    { icon: Phone, label: 'Call / WhatsApp', value: '0787 070 909', href: 'tel:+255787070909' },
     { icon: Mail, label: 'Email', value: 'info@micnichomes.co.tz', href: 'mailto:info@micnichomes.co.tz' },
-    { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with our team', href: 'https://wa.me/255620188878' },
+    { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with our team', href: 'https://wa.me/255787070909' },
 ];
 
 interface Props {
@@ -54,7 +54,7 @@ export default function Contact({ heroImages }: Props) {
                     mainEntity: {
                         '@type': 'LodgingBusiness',
                         name: 'Micnic Homes',
-                        telephone: '+255620188878',
+                        telephone: '+255787070909',
                         email: 'info@micnichomes.co.tz',
                         address: {
                             '@type': 'PostalAddress',
@@ -164,7 +164,7 @@ export default function Contact({ heroImages }: Props) {
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
                                         className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-navy-900 outline-none transition-colors focus:border-gold-400"
-                                        placeholder="0620188878"
+                                        placeholder="0787 070 909"
                                     />
                                     {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                                 </label>

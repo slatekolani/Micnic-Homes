@@ -217,7 +217,7 @@ class BookingController extends Controller
             [
                 ['label' => 'View property', 'url' => url('/properties/' . $booking->property->slug)],
             ],
-            'Our team will contact you through email, phone, or WhatsApp to confirm availability and payment details. For urgent help, call or WhatsApp 0620188878.'
+            'Our team will contact you through email, phone, or WhatsApp to confirm availability and payment details. For urgent help, call or WhatsApp 0787 070 909.'
         );
     }
 
@@ -252,7 +252,7 @@ class BookingController extends Controller
             . '<table style="width:100%;border-collapse:collapse;">' . $rowHtml . '</table>'
             . ($note ? '<div style="margin-top:20px;padding:18px;border-radius:18px;background:#f8fafc;border:1px solid #e5edf6;"><p style="margin:0;color:#0f172a;font-size:14px;line-height:1.8;">' . nl2br(e($note)) . '</p></div>' : '')
             . $buttonHtml
-            . '<p style="margin:24px 0 0;color:#64748b;font-size:13px;line-height:1.7;">Micnic Homes<br>info@micnichomes.co.tz | 0620188878</p>'
+            . '<p style="margin:24px 0 0;color:#64748b;font-size:13px;line-height:1.7;">Micnic Homes<br>info@micnichomes.co.tz | 0787 070 909</p>'
             . '</div></div></div></div>';
     }
 }
